@@ -1,0 +1,449 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>เลขเด็ดตามสถิติ</title>
+<meta name="description" content="จัดอันดับเลขหวยรัฐบาลงวดถัดไปจากผลย้อนหลังทุกงวดตั้งแต่ปี 2553 อัปเดตอัตโนมัติหลังหวยออก">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500;600&family=Sarabun:wght@400;600&family=Chakra+Petch:wght@500;700&display=swap">
+<style>
+/* Layout: one narrow column of "ticket" cards; summary (picks) first, evidence (backtest, charts, history) after */
+:root{
+  --bg:#EEF1F7; --surface:#FFFFFF; --ink:#18213A; --muted:#5B6478; --line:#D5DAE6;
+  --accent:#C8102E; --accent-soft:#FBE7EA; --gold:#9A6B00; --gold-soft:#FFF4D6; --good:#1E7A4C; --bar:#3B4F8A;
+  --f-display:"Mitr","Sarabun",system-ui,sans-serif;
+  --f-body:"Sarabun",system-ui,sans-serif;
+  --f-num:"Chakra Petch","Sarabun",ui-monospace,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#0E1320; --surface:#171E30; --ink:#E8ECF5; --muted:#9AA3B8; --line:#2A3350;
+  --accent:#FF5A6E; --accent-soft:#3A1A24; --gold:#E7B84A; --gold-soft:#2E2715; --good:#4CC38A; --bar:#7F95D8; color-scheme:dark}}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.6}
+.wrap{max-width:860px;margin:0 auto;padding-block:24px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:20px}
+h1,h2,h3{font-family:var(--f-display);font-weight:500;text-wrap:balance;margin:0;line-height:1.3}
+h1{font-size:clamp(28px,6vw,40px)}
+h2{font-size:22px}
+h3{font-size:16px;font-weight:500}
+p{margin:0}
+.muted{color:var(--muted)}
+.small{font-size:14px}
+header{display:flex;flex-direction:column;gap:6px}
+.eyebrow{font-size:13px;letter-spacing:.08em;color:var(--accent);font-weight:600}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.note{background:var(--gold-soft);border:1px solid var(--line);border-radius:12px;padding:12px 16px;font-size:14px}
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button,.btn{font:inherit;font-size:15px;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:7px 14px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:600}
+.btn:focus-visible,.seg button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.tickets{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+.ticket{border:2px dashed var(--line);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.ticket.main{grid-column:1/-1;border-color:var(--accent);background:var(--accent-soft)}
+.ticket .label{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+.ticket .label b{font-family:var(--f-display);font-weight:500;font-size:17px}
+.big{font-family:var(--f-num);font-weight:700;font-size:clamp(38px,9vw,56px);letter-spacing:.12em;color:var(--accent);line-height:1.1;font-variant-numeric:tabular-nums}
+.ticket:not(.main) .big{font-size:40px;color:var(--ink)}
+.alts{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-family:var(--f-num);font-weight:500;font-size:17px;padding:2px 10px;border-radius:8px;background:var(--bg);border:1px solid var(--line);font-variant-numeric:tabular-nums;letter-spacing:.05em}
+.tag{font-size:13px;color:var(--muted)}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.bars{display:grid;grid-template-columns:repeat(10,1fr);gap:4px;align-items:end;height:120px;border-bottom:1px solid var(--line)}
+.bars div{background:var(--bar);border-radius:4px 4px 0 0;min-height:2px}
+.bars div.top{background:var(--accent)}
+.barlabels{display:grid;grid-template-columns:repeat(10,1fr);gap:4px;text-align:center;font-family:var(--f-num);font-size:14px}
+.barlabels span small{display:block;color:var(--muted);font-size:11px}
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:15px;min-width:520px}
+th,td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+th{font-weight:600;color:var(--muted);font-size:13px}
+td.n{font-family:var(--f-num);font-variant-numeric:tabular-nums;letter-spacing:.04em}
+td.best{color:var(--good);font-weight:600}
+tr.rand td{color:var(--muted)}
+.msg{font-size:14px}
+.msg.ok{color:var(--good)}
+.msg.err{color:var(--accent)}
+details summary{cursor:pointer;font-family:var(--f-display);font-size:17px}
+details[open] summary{margin-bottom:10px}
+ul.how{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+.loading{font-family:var(--f-num);color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="eyebrow" id="nextLabel">งวดถัดไป</span>
+    <h1>เลขเด็ดตามสถิติ</h1>
+    <p class="muted" id="dataInfo">กำลังโหลดผลรางวัลย้อนหลัง...</p>
+  </header>
+
+  <div class="note">
+    หวยรัฐบาลออกแบบสุ่ม ทุกเลขมีโอกาสออกเท่ากัน ระบบนี้ลองสูตรสถิติหลายแบบกับผลจริงย้อนหลัง แล้วเลือกสูตรที่ทายถูกมากที่สุดให้อัตโนมัติ ตารางผลทดสอบด้านล่างบอกตรง ๆ ว่าแต่ละสูตรแม่นแค่ไหนเมื่อเทียบกับการเดามั่ว เล่นแต่พอดีนะครับ
+  </div>
+
+  <section class="card" aria-labelledby="pickH">
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <h2 id="pickH">เลขแนะนำ</h2>
+      <div class="seg" role="group" aria-label="สูตรคำนวณ" id="modeSeg">
+        <button type="button" data-mode="auto" aria-pressed="true">อัตโนมัติ (สูตรที่ทดสอบแล้วดีสุด)</button>
+        <button type="button" data-mode="mix" aria-pressed="false">ผสม</button>
+        <button type="button" data-mode="hot" aria-pressed="false">ออกบ่อยตลอดกาล</button>
+        <button type="button" data-mode="recent" aria-pressed="false">มาแรงช่วงหลัง</button>
+        <button type="button" data-mode="cold" aria-pressed="false">ค้างนาน ยังไม่ออก</button>
+      </div>
+      <p class="small muted" id="modeDesc"></p>
+    </div>
+    <div class="tickets" id="tickets"><p class="loading">กำลังคำนวณ...</p></div>
+    <div class="controls">
+      <button class="btn primary" type="button" id="randBtn">สุ่มเลขตามสถิติ</button>
+      <button class="btn" type="button" id="resetBtn" hidden>กลับไปเลขอันดับ 1</button>
+      <button class="btn" type="button" id="copyBtn">คัดลอกเลขทั้งหมด</button>
+      <span class="msg ok" id="copyMsg" aria-live="polite"></span>
+    </div>
+  </section>
+
+  <section class="card" aria-labelledby="btH">
+    <h2 id="btH">ผลทดสอบย้อนหลังทุกสูตร</h2>
+    <p class="small muted" id="btDesc">กำลังทดสอบ...</p>
+    <div class="tablewrap"><table>
+      <thead><tr><th>สูตร</th><th>2 ตัวท้าย</th><th>3 ตัวหน้า</th><th>3 ตัวหลัง</th><th>รางวัลที่ 1 ตรงหลัก</th></tr></thead>
+      <tbody id="btBody"></tbody>
+    </table></div>
+  </section>
+
+  <section class="card" aria-labelledby="chH">
+    <h2 id="chH">ความถี่ของแต่ละหลัก (2 ตัวท้าย)</h2>
+    <p class="small muted">แท่งสีแดงคือหลักที่คะแนนสูงสุดตามสูตรที่ใช้อยู่ ตัวเลขใต้แท่งคือจำนวนครั้งที่ออกจริงทั้งหมด</p>
+    <div class="grid2">
+      <div><h3>หลักสิบ</h3><div class="bars" id="bars0"></div><div class="barlabels" id="lab0"></div></div>
+      <div><h3>หลักหน่วย</h3><div class="bars" id="bars1"></div><div class="barlabels" id="lab1"></div></div>
+    </div>
+    <h3>2 ตัวท้ายที่ออกบ่อยที่สุดตลอดกาล</h3>
+    <div class="alts" id="hot2"></div>
+  </section>
+
+  <section class="card" aria-labelledby="hisH">
+    <h2 id="hisH">ผลย้อนหลัง 20 งวดล่าสุด</h2>
+    <div class="tablewrap"><table>
+      <thead><tr><th>งวดวันที่</th><th>รางวัลที่ 1</th><th>3 ตัวหน้า</th><th>3 ตัวหลัง</th><th>2 ตัวท้าย</th></tr></thead>
+      <tbody id="hist"></tbody>
+    </table></div>
+  </section>
+
+  <section class="card">
+    <details>
+      <summary>ระบบทำงานยังไง</summary>
+      <ul class="how small">
+        <li>ทุกวันที่ 1, 2, 16 และ 17 ของเดือน ระบบจะดึงผลรางวัลล่าสุดมาเก็บไว้เอง แล้วเว็บจะคำนวณเลขงวดถัดไปใหม่ทันทีที่เปิด</li>
+        <li>แต่ละสูตรแยกนับทีละหลัก เช่น 2 ตัวท้ายนับว่าหลักสิบกับหลักหน่วยออกเลขอะไรบ่อย แล้วคูณกันเป็นคะแนน เลข 2 ตัวและ 3 ตัวผสมคะแนนจากจำนวนครั้งที่เลขนั้นออกตรงตัวด้วย</li>
+        <li><b>ออกบ่อยตลอดกาล</b> ทุกงวดน้ำหนักเท่ากัน · <b>มาแรงช่วงหลัง</b> งวดที่เก่ากว่า 24 งวด (ประมาณ 1 ปี) น้ำหนักลดครึ่งหนึ่ง · <b>ค้างนาน</b> ให้คะแนนเลขที่ไม่ได้ออกมานาน · <b>ผสม</b> เฉลี่ยตลอดกาลกับช่วงหลัง</li>
+        <li><b>อัตโนมัติ</b> จำลองว่าใช้แต่ละสูตรทาย 60 งวดล่าสุด โดยใช้เฉพาะข้อมูลก่อนงวดนั้น แล้วเลือกสูตรที่ถูกมากที่สุดแยกตามประเภทรางวัล</li>
+        <li>"คะแนนสถิติ" บอกว่าเลขนั้นออกบ่อยกว่าค่าเฉลี่ยในอดีตแค่ไหน (1.00 = เท่าค่าเฉลี่ย) ไม่ใช่โอกาสถูกรางวัลจริง</li>
+        <li>ข้อมูลผลรางวัลจากชุดข้อมูลสาธารณะ huayreview/thai-lottery-results (สำรองด้วย huaybase/thai-lottery-results) ซึ่งอ้างอิงเอกสารผลรางวัลของสำนักงานสลากกินแบ่งรัฐบาล</li>
+      </ul>
+    </details>
+  </section>
+</div>
+
+<script>
+const TH_M = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
+const TH_MF = ["มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน","กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม"];
+const MODES = ["mix","hot","recent","cold"];
+const MODE_NAME = {mix:"ผสม", hot:"ออกบ่อยตลอดกาล", recent:"มาแรงช่วงหลัง", cold:"ค้างนาน"};
+const MODE_DESC = {
+  mix: "เฉลี่ยระหว่างสถิติทั้งหมดกับช่วงประมาณ 1 ปีหลัง",
+  hot: "เลือกเลขที่ออกบ่อยที่สุดตั้งแต่ปี 2553 ทุกงวดมีน้ำหนักเท่ากัน",
+  recent: "ให้น้ำหนักงวดล่าสุดมากกว่า งวดที่เก่ากว่า 24 งวด (ประมาณ 1 ปี) มีน้ำหนักครึ่งเดียว",
+  cold: "เลือกเลขที่ไม่ได้ออกมานานที่สุด ตามความเชื่อว่าเลขค้างจะต้องออก"
+};
+const HALF_LIFE = 24, BT_DRAWS = 60, BT_PICKS = 5;
+
+let mode = "auto";
+let draws = [];
+let best = null;    // per prize type: chosen mode under "auto"
+let btRes = null;
+let shown = null;
+let picks = null;
+
+function thDate(iso, full){
+  const [y,m,d] = iso.split("-").map(Number);
+  return `${d} ${(full?TH_MF:TH_M)[m-1]} ${y+543}`;
+}
+function nextDrawDate(iso){
+  const [y,m,d] = iso.split("-").map(Number);
+  if (d < 16) return `${y}-${String(m).padStart(2,"0")}-16`;
+  const ny = m === 12 ? y+1 : y, nm = m === 12 ? 1 : m+1;
+  return `${ny}-${String(nm).padStart(2,"0")}-01`;
+}
+
+function weightFn(m, n){
+  if (m === "recent") return i => Math.pow(0.5, (n-1-i)/HALF_LIFE);
+  return () => 1;
+}
+// items: [{i: drawIndex, s: "123"}], n = number of draws considered
+function posDistRaw(items, L, n, m){
+  const P = [];
+  for (let k=0; k<L; k++){
+    const c = new Array(10).fill(1);   // Laplace smoothing
+    if (m === "cold"){
+      const last = new Array(10).fill(-1);
+      for (const it of items) { const dg = +it.s[k]; if (it.i > last[dg]) last[dg] = it.i; }
+      for (let dg=0; dg<10; dg++) c[dg] = (last[dg] < 0 ? n : n-1-last[dg]) + 1;
+    } else {
+      const w = weightFn(m, n);
+      for (const it of items) c[+it.s[k]] += w(it.i);
+    }
+    const t = c.reduce((a,b)=>a+b,0);
+    P.push(c.map(v => v/t));
+  }
+  return P;
+}
+function posDist(items, L, n, m){
+  if (m !== "mix") return posDistRaw(items, L, n, m);
+  const a = posDistRaw(items, L, n, "hot"), b = posDistRaw(items, L, n, "recent");
+  return a.map((row,k) => row.map((v,dg) => (v + b[k][dg]) / 2));
+}
+function exactDist(items, L, n, m){
+  const N = Math.pow(10, L), alpha = 0.5;
+  const pick = mm => {
+    const c = new Float64Array(N).fill(alpha);
+    if (mm === "cold"){
+      const last = new Int32Array(N).fill(-1);
+      for (const it of items) { const v = +it.s; if (it.i > last[v]) last[v] = it.i; }
+      for (let v=0; v<N; v++) c[v] = (last[v] < 0 ? n*2 : n-1-last[v]) + 1;
+    } else {
+      const w = weightFn(mm, n);
+      for (const it of items) c[+it.s] += w(it.i);
+    }
+    let t = 0; for (const v of c) t += v;
+    return Array.from(c, v => v/t);
+  };
+  if (m !== "mix") return pick(m);
+  const a = pick("hot"), b = pick("recent");
+  return a.map((v,i) => (v + b[i]) / 2);
+}
+// returns [{s, lift}] sorted desc, lift relative to the average number
+function rankSmall(items, L, n, m, exactWeight){
+  const P = posDist(items, L, n, m), E = exactDist(items, L, n, m), N = Math.pow(10, L);
+  const out = [];
+  for (let v=0; v<N; v++){
+    const s = String(v).padStart(L, "0");
+    let pl = 1; for (let k=0; k<L; k++) pl *= P[k][+s[k]] * 10;
+    out.push({s, lift: Math.pow(pl, 1-exactWeight) * Math.pow(E[v] * N, exactWeight)});
+  }
+  return out.sort((a,b) => b.lift - a.lift);
+}
+function rankSix(items, n, m){
+  const P = posDist(items, 6, n, m);
+  const top = P.map(row => row.map((p,dg)=>({dg,p})).sort((a,b)=>b.p-a.p).slice(0,3));
+  let combos = [{s:"", lift:1}];
+  for (let k=0; k<6; k++){
+    const nx = [];
+    for (const c of combos) for (const t of top[k]) nx.push({s:c.s+t.dg, lift:c.lift*t.p*10});
+    combos = nx;
+  }
+  return {list: combos.sort((a,b)=>b.lift-a.lift), P};
+}
+function itemsFor(ds, field){
+  const out = [];
+  ds.forEach((d,i) => {
+    const v = d[field];
+    if (Array.isArray(v)) v.forEach(s => out.push({i, s}));
+    else if (v) out.push({i, s:v});
+  });
+  return out;
+}
+const RANKERS = {
+  first: (ds, m) => rankSix(itemsFor(ds,"first"), ds.length, m),
+  f3: (ds, m) => rankSmall(itemsFor(ds,"f3"), 3, ds.length, m, 0.3),
+  b3: (ds, m) => rankSmall(itemsFor(ds,"b3"), 3, ds.length, m, 0.3),
+  b2: (ds, m) => rankSmall(itemsFor(ds,"b2"), 2, ds.length, m, 0.5),
+};
+function modeFor(type){ return mode === "auto" ? best[type] : mode; }
+function compute(){
+  const six = RANKERS.first(draws, modeFor("first"));
+  return {
+    first: six.list, P6: six.P,
+    f3: RANKERS.f3(draws, modeFor("f3")),
+    b3: RANKERS.b3(draws, modeFor("b3")),
+    b2: RANKERS.b2(draws, modeFor("b2")),
+  };
+}
+
+// Walk-forward test: for each of the last BT_DRAWS draws, rank using only earlier draws.
+function backtest(){
+  const T = Math.min(BT_DRAWS, draws.length - 50);
+  const res = {T};
+  for (const m of MODES){
+    const r = {b2:0, f3:0, f3n:0, b3:0, b3n:0, first:0};
+    for (let t = draws.length - T; t < draws.length; t++){
+      const past = draws.slice(0, t), real = draws[t];
+      if (RANKERS.b2(past, m).slice(0,BT_PICKS).some(x => x.s === real.b2)) r.b2++;
+      for (const k of ["f3","b3"]){
+        if (!real[k].length) continue;
+        r[k+"n"]++;
+        const top = RANKERS[k](past, m).slice(0,BT_PICKS).map(x => x.s);
+        if (real[k].some(s => top.includes(s))) r[k]++;
+      }
+      const six = RANKERS.first(past, m).list[0].s;
+      r.first += [...six].filter((c,k) => c === real.first[k]).length;
+    }
+    r.first /= T;
+    res[m] = r;
+  }
+  const avgLen = k => draws.slice(-T).reduce((a,d)=>a+d[k].length,0) / T;
+  res.rand = {
+    b2: T*BT_PICKS/100,
+    f3: res.mix.f3n * (1 - Math.pow(1-BT_PICKS/1000, avgLen("f3"))),
+    b3: res.mix.b3n * (1 - Math.pow(1-BT_PICKS/1000, avgLen("b3"))),
+    first: 0.6
+  };
+  // pick the best mode per prize type; ties keep the earlier mode in MODES order ("mix" first)
+  const pickBest = key => MODES.reduce((a,m) => res[m][key] > res[a][key] ? m : a, MODES[0]);
+  best = {b2:pickBest("b2"), f3:pickBest("f3"), b3:pickBest("b3"), first:pickBest("first")};
+  return res;
+}
+
+function sampleFrom(list){
+  const tot = list.reduce((a,x)=>a+x.lift, 0);
+  let r = Math.random()*tot;
+  for (const x of list){ r -= x.lift; if (r <= 0) return x; }
+  return list[list.length-1];
+}
+function sampleTwo(list){
+  const a = sampleFrom(list); let b = sampleFrom(list), guard = 0;
+  while (b.s === a.s && guard++ < 50) b = sampleFrom(list);
+  return [a, b];
+}
+
+function chips(list, skip){
+  return list.filter(x => !skip.includes(x.s)).slice(0,5).map(x => `<span class="chip">${x.s}</span>`).join("");
+}
+function tagTxt(type, l){
+  const by = mode === "auto" ? ` · สูตร${MODE_NAME[best[type]]}` : "";
+  return `คะแนนสถิติ ${l.toFixed(2)}${by}`;
+}
+function ticket(type, name, nums, lift, list, main){
+  return `<div class="ticket${main?" main":""}"><div class="label"><b>${name}</b><span class="tag">${tagTxt(type, lift)}</span></div>
+    <div class="big">${nums.map(x=>x.s).join(" ")}</div>
+    <div class="small muted">ตัวเลือกอื่น</div><div class="alts">${chips(list, nums.map(x=>x.s))}</div></div>`;
+}
+function renderTickets(){
+  const s = shown;
+  document.getElementById("tickets").innerHTML = [
+    ticket("first", "รางวัลที่ 1 (6 ตัว)", [s.first], s.first.lift, picks.first, true),
+    ticket("f3", "3 ตัวหน้า", s.f3, (s.f3[0].lift+s.f3[1].lift)/2, picks.f3),
+    ticket("b3", "3 ตัวหลัง", s.b3, (s.b3[0].lift+s.b3[1].lift)/2, picks.b3),
+    ticket("b2", "2 ตัวท้าย", [s.b2], s.b2.lift, picks.b2),
+  ].join("");
+}
+
+function renderBars(){
+  const items = itemsFor(draws, "b2");
+  const P = posDist(items, 2, draws.length, modeFor("b2"));
+  for (let k=0; k<2; k++){
+    const row = P[k], mx = Math.max(...row), mn = Math.min(...row);
+    const counts = new Array(10).fill(0);
+    for (const it of items) counts[+it.s[k]]++;
+    document.getElementById("bars"+k).innerHTML = row.map((p,dg) =>
+      `<div class="${p===mx?"top":""}" style="height:${mx===mn?100:40+60*(p-mn)/(mx-mn)}%" title="เลข ${dg}: ${counts[dg]} ครั้ง"></div>`).join("");
+    document.getElementById("lab"+k).innerHTML = counts.map((c,dg) => `<span>${dg}<small>${c}</small></span>`).join("");
+  }
+  const freq = {};
+  for (const d of draws) freq[d.b2] = (freq[d.b2]||0) + 1;
+  document.getElementById("hot2").innerHTML = Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,10)
+    .map(([s,c]) => `<span class="chip">${s} <span class="muted small">${c} ครั้ง</span></span>`).join("");
+}
+
+function renderBacktest(){
+  const r = btRes, T = r.T;
+  document.getElementById("btDesc").textContent =
+    `จำลองว่าใช้แต่ละสูตรทาย ${T} งวดล่าสุด โดยใช้เฉพาะข้อมูลก่อนงวดนั้น ซื้อเลขอันดับ 1-5 ของแต่ละประเภท สีเขียวคือสูตรที่ระบบอัตโนมัติเลือก`;
+  const cell = (m, key, txt) => `<td class="n${best[key]===m?" best":""}">${txt}</td>`;
+  const rows = MODES.map(m => `<tr><td>${MODE_NAME[m]}</td>
+    ${cell(m,"b2",`ถูก ${r[m].b2}/${T}`)}${cell(m,"f3",`ถูก ${r[m].f3}/${r[m].f3n}`)}${cell(m,"b3",`ถูก ${r[m].b3}/${r[m].b3n}`)}${cell(m,"first",`${r[m].first.toFixed(2)}/6`)}</tr>`);
+  rows.push(`<tr class="rand"><td>เดามั่ว (ค่าเฉลี่ย)</td><td class="n">ถูก ${r.rand.b2.toFixed(1)}</td><td class="n">ถูก ${r.rand.f3.toFixed(1)}</td><td class="n">ถูก ${r.rand.b3.toFixed(1)}</td><td class="n">${r.rand.first.toFixed(2)}/6</td></tr>`);
+  document.getElementById("btBody").innerHTML = rows.join("");
+}
+
+function renderHistory(meta){
+  document.getElementById("hist").innerHTML = draws.slice(-20).reverse().map(d =>
+    `<tr><td>${thDate(d.d)}</td><td class="n">${d.first}</td><td class="n">${d.f3.join(" ")||"-"}</td><td class="n">${d.b3.join(" ")}</td><td class="n">${d.b2}</td></tr>`).join("");
+  const last = draws[draws.length-1];
+  document.getElementById("nextLabel").textContent = `งวดถัดไป ${thDate(nextDrawDate(last.d), true)} (ตามรอบปกติ)`;
+  const upd = meta && meta.updated ? ` · ตรวจผลอัตโนมัติล่าสุด ${thDate(meta.updated.slice(0,10))}` : "";
+  document.getElementById("dataInfo").textContent =
+    `คำนวณจากผลจริง ${draws.length} งวด ตั้งแต่ ${thDate(draws[0].d)} ถึง ${thDate(last.d)}${upd}`;
+}
+
+function topShown(){
+  return {first:picks.first[0], f3:[picks.f3[0],picks.f3[1]], b3:[picks.b3[0],picks.b3[1]], b2:picks.b2[0]};
+}
+function renderPicks(){
+  picks = compute();
+  shown = topShown();
+  document.getElementById("modeDesc").textContent = mode === "auto"
+    ? `เลือกสูตรแยกตามประเภทรางวัล: 6 ตัว ${MODE_NAME[best.first]} · 3 ตัวหน้า ${MODE_NAME[best.f3]} · 3 ตัวหลัง ${MODE_NAME[best.b3]} · 2 ตัว ${MODE_NAME[best.b2]}`
+    : MODE_DESC[mode];
+  document.getElementById("resetBtn").hidden = true;
+  renderTickets(); renderBars();
+}
+
+document.getElementById("modeSeg").addEventListener("click", e => {
+  const b = e.target.closest("button[data-mode]"); if (!b || !best) return;
+  mode = b.dataset.mode;
+  document.querySelectorAll("#modeSeg button").forEach(x => x.setAttribute("aria-pressed", x === b ? "true" : "false"));
+  renderPicks();
+});
+document.getElementById("randBtn").addEventListener("click", () => {
+  if (!picks) return;
+  const P = picks.P6;
+  let s = "", lift = 1;
+  for (let k=0; k<6; k++){
+    let r = Math.random(), dg = 0;
+    for (; dg<9; dg++){ r -= P[k][dg]; if (r <= 0) break; }
+    s += dg; lift *= P[k][dg]*10;
+  }
+  shown = {first:{s,lift}, f3:sampleTwo(picks.f3.slice(0,100)), b3:sampleTwo(picks.b3.slice(0,100)), b2:sampleFrom(picks.b2.slice(0,30))};
+  renderTickets();
+  document.getElementById("resetBtn").hidden = false;
+});
+document.getElementById("resetBtn").addEventListener("click", () => {
+  shown = topShown(); renderTickets(); document.getElementById("resetBtn").hidden = true;
+});
+document.getElementById("copyBtn").addEventListener("click", () => {
+  if (!shown) return;
+  const s = shown;
+  const txt = `เลขงวด ${document.getElementById("nextLabel").textContent.replace("งวดถัดไป ","")}\nรางวัลที่ 1: ${s.first.s}\n3 ตัวหน้า: ${s.f3[0].s} ${s.f3[1].s}\n3 ตัวหลัง: ${s.b3[0].s} ${s.b3[1].s}\n2 ตัวท้าย: ${s.b2.s}`;
+  const msg = document.getElementById("copyMsg");
+  navigator.clipboard.writeText(txt).then(() => { msg.textContent = "คัดลอกแล้ว"; }, () => { msg.textContent = "คัดลอกไม่ได้ ลองกดค้างที่ตัวเลขแทน"; });
+  setTimeout(() => msg.textContent = "", 2500);
+});
+
+async function boot(){
+  try {
+    const res = await fetch("data.json?t=" + Date.now(), {cache:"no-store"});
+    if (!res.ok) throw new Error(res.status);
+    const meta = await res.json();
+    draws = meta.draws.map(r => ({d:r[0], first:r[1], f3:r[2]?r[2].split(" "):[], b3:r[3].split(" ").filter(Boolean), b2:r[4]}))
+      .sort((x,y) => x.d < y.d ? -1 : 1);
+    renderHistory(meta);
+    // let the header paint before the heavier backtest runs
+    await new Promise(r => setTimeout(r, 30));
+    btRes = backtest();
+    renderBacktest();
+    renderPicks();
+  } catch (e) {
+    const el = document.getElementById("dataInfo");
+    el.textContent = "โหลดผลรางวัลไม่สำเร็จ ลองรีเฟรชหน้าอีกครั้ง";
+    el.className = "msg err";
+  }
+}
+boot();
+</script>
+</body>
+</html>
